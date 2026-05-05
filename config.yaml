@@ -1,0 +1,17 @@
+# Which checks to run
+checks:
+  todo: true
+  merge_conflict: true
+# Scan all .py and .txt files by default
+include_files:
+  - '**/*.py'
+  - '**/*.txt'
+# Exclude tests and virtualenv
+exclude_dirs:
+  - 'env/'
+  - '.venv/'
+  - '__pycache__/'
+github:
+  repo: "username/reponame"  # Change to your GitHub repo, e.g. "user/project"
+  token: "YOUR_GITHUB_TOKEN"  # Best: set as environment variable instead (see README)
+  issue_title: "Code Hygiene: TODO/Conflict Markers Found"
