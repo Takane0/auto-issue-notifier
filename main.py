@@ -6,9 +6,26 @@ from github_api import create_or_update_issue
 
 CONFIG_PATH = 'config.yaml'
 
+
 def load_config():
     with open(CONFIG_PATH, 'r') as f:
         return yaml.safe_load(f)
+
+
+def format_issue_body(matches):
+    body_lines = ['The following code problems were found:\n']
+    for fname, issues in matches.items():
+        for issue in issues:
+            line_no = issue['line']
+            match_text = issue.get('match', 'issue found')
+            body_lines.append(f"- {fname}: line {line_no} — {match_text}")
+            snippet = issue.get('context') or issue.get('snippet')
+            if snippet:
+                body_lines.append('```')
+                body_lines.extend(snippet.splitlines())
+                body_lines.append('```')
+    return '\n'.join(body_lines)
+
 
 def main():
     config = load_config()
@@ -28,15 +45,12 @@ def main():
     )
 
     if matches:
-        body_lines = ['The following code problems were found:\n']
-        for fname, issues in matches.items():
-            for issue in issues:
-                body_lines.append(f"- {fname}: line {issue['line']}: {issue['match']}")
-        issue_body = '\n'.join(body_lines)
+        issue_body = format_issue_body(matches)
         create_or_update_issue(github_repo, github_token, issue_title, issue_body)
         print("GitHub issue created/updated.")
     else:
         print("No issues found.")
+
 
 if __name__ == '__main__':
     main()
