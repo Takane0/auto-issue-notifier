@@ -2,6 +2,8 @@
 
 A small Python bot that scans source files in a GitHub repo for leftover TODO comments and/or unresolved merge conflicts (marked by `<<<<<<<` or `>>>>>>>`). If any are found, it creates or updates an issue via GitHub's API notifying contributors of the problem locations.
 
+The issue body now includes a little more location detail, like the line number and a short nearby snippet when available, so it is easier to jump to the problem.
+
 ## How to use
 
 1. **Clone this repository into your project or copy the relevant files.**
