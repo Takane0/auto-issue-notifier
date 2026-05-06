@@ -1,5 +1,6 @@
 import requests
 
+
 def create_or_update_issue(repo, token, title, body):
     headers = {
         'Authorization': f'token {token}',
