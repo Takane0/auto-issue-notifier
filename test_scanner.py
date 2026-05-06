@@ -1,9 +1,11 @@
 from scanner import scan_files
 import os
 
+
 def write_temp_file(filename, lines):
     with open(filename, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
+
 
 def test_todo_detection():
     fname = 'test_todo.py'
@@ -12,7 +14,9 @@ def test_todo_detection():
     matches = scan_files([fname], [], check_todo=True, check_merge=False)
     assert fname in matches
     assert len(matches[fname]) == 2
+    assert matches[fname][0]['context'] == 'print("Hello")\n# TODO check this\nx = 2 # TODO'
     os.remove(fname)
+
 
 def test_merge_conflict_detection():
     fname = 'test_merge.py'
@@ -21,7 +25,9 @@ def test_merge_conflict_detection():
     matches = scan_files([fname], [], check_todo=False, check_merge=True)
     assert fname in matches
     assert len(matches[fname]) == 2
+    assert matches[fname][0]['context'] == 'print("Safe")\n<<<<<<< HEAD\ncode1'
     os.remove(fname)
+
 
 def test_no_detection():
     fname = 'test_clean.py'
@@ -30,6 +36,7 @@ def test_no_detection():
     matches = scan_files([fname], [], check_todo=True, check_merge=True)
     assert fname not in matches
     os.remove(fname)
+
 
 if __name__ == '__main__':
     test_todo_detection()
