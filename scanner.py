@@ -1,23 +1,21 @@
 import os
-glob_has = False
-try:
-    from glob import glob
-    glob_has = True
-except ImportError:
-    glob_has = False
+from pathlib import Path
+
+
+def _make_context(lines, idx, radius=1):
+    start = max(0, idx - radius)
+    end = min(len(lines), idx + radius + 1)
+    return ''.join(lines[start:end]).rstrip('\n')
+
 
 def scan_files(include_patterns, exclude_dirs, check_todo=True, check_merge=True):
     # Find files to scan
     files = set()
-    if glob_has:
-        import glob
-        for pat in include_patterns:
-            files.update(glob.glob(pat, recursive=True))
-    else:
-        # If glob not available, scan all py files in cwd
-        for fname in os.listdir('.'):
-            if fname.endswith('.py'):
-                files.add(fname)
+    for pat in include_patterns:
+        for match in Path('.').glob(pat):
+            if match.is_file():
+                files.add(str(match))
+
     exclude_dirs = set(exclude_dirs)
     results = {}
     for path in files:
@@ -28,13 +26,24 @@ def scan_files(include_patterns, exclude_dirs, check_todo=True, check_merge=True
                 break
         if skip or not os.path.isfile(path):
             continue
+
         with open(path, encoding='utf-8', errors='ignore') as f:
-            issues = []
-            for idx, line in enumerate(f, 1):
-                if check_todo and 'TODO' in line:
-                    issues.append({'line': idx, 'match': 'TODO'})
-                if check_merge and (line.strip().startswith('<<<<<<<') or line.strip().startswith('>>>>>>>')):
-                    issues.append({'line': idx, 'match': 'merge conflict marker'})
-            if issues:
-                results[path] = issues
+            all_lines = f.readlines()
+
+        issues = []
+        for idx, line in enumerate(all_lines, 1):
+            if check_todo and 'TODO' in line:
+                issues.append({
+                    'line': idx,
+                    'match': 'TODO',
+                    'context': _make_context(all_lines, idx - 1),
+                })
+            if check_merge and (line.strip().startswith('<<<<<<<') or line.strip().startswith('>>>>>>>')):
+                issues.append({
+                    'line': idx,
+                    'match': 'merge conflict marker',
+                    'context': _make_context(all_lines, idx - 1),
+                })
+        if issues:
+            results[path] = issues
     return results
